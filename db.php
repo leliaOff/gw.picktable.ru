@@ -394,6 +394,57 @@ class Db {
 		}		 
 	}
 	/* конец Поиск соответствия пользрвателя и роли */
+    
+    /* Получение спика всех пользователей */
+    function getAllUsers($sessionId, $top=null, $limit=null, $search=null)
+    {
+       $usersQuery = "SELECT id, email, phone, full_name, status FROM users";
+       if($top != null) { $usersQuery .= " TOP={$top}"; };
+       if($limit != null) { $usersQuery .= " LIMIT={$LIMIT}"; };
+       if($search != null) { $usersQuery .= " where full_name LIKE %{$search}%"; };
+       
+       $roles = function($id) {
+           $rolesQuery = "SELECT * FROM roles WHERE id = (SELECT role_id FROM users_in_roles uir WHERE uir.user_id = ".$id.")";
+           if($stmt = $this->mysqli->prepare($rolesQuery))
+           {
+                $stmt->execute(); 
+                $stmt->bind_result($rid,$name,$title);
+                $stmt->store_result();
+                $result = Array();
+                if($stmt->num_rows == 0) return 0;
+                while($stmt->fetch()) {
+                    $result[] = array('id'=>$rid,'name'=>$name,'title'=>$title);
+                };
+                return $result;
+                } else {
+                    return Array('status' => 'error',  'message' => "roles".$this->mysqli->error);
+                };
+       };
+       
+       if($stmt = $this->mysqli->prepare($usersQuery))
+       {
+            $stmt->execute(); 
+            $stmt->bind_result($id,$email,$phone,$full_name,$status);
+            $stmt->store_result();
+            $result = Array();
+            if($stmt->num_rows == 0) return false;
+            while($stmt->fetch())
+            {
+                $result[] = Array(  'id'    => $id,
+                                    'email' => $email,
+                                    'phone' => $phone,
+                                    'full_name' => $full_name,
+                                    'status'    => $status,
+                                    'roles'     => $roles($id)
+                
+                );
+            };
+       return Array('status' => 'success', 'result' => $result);
+       } else {
+           return Array('status' => 'error', 'message' => "usrs".$this->mysqli->error);
+       };
+    }
+    /* конец Получение спика всех пользователей */
 }
 
 /*

@@ -8,7 +8,8 @@
 	if(isset($_GET['name'])) $method = $_GET['name'];
 	if(@function_exists($method)) $result = $method();
 	else $result = Array('status' => 'error', 'message' => 'Method not found');
-	
+    
+    //Это что?
 	function test() {
 		global $base, $db;
 		$sessionId = $_GET['session_id'];
@@ -44,6 +45,7 @@
 	function registration() {
 		global $base, $db;
 		//Проверка всех полей
+        //А проверку на тип данных?
 		if(!isset($_GET['email'])) return Array('status' => 'error', 'message' => 'Unknown email');
 		if(!isset($_GET['phone'])) return Array('status' => 'error', 'message' => 'Unknown phone');
 		if(!isset($_GET['full_name'])) return Array('status' => 'error', 'message' => 'Unknown name');
@@ -262,6 +264,30 @@
 		return $db->selectRoles();
 	}
 	/* конец Список ролей */
+    
+    /* Список пользователей */
+    function getUsers()
+    {
+        //Такой подход мне не нравится, но лучше пока что не могу предложить. НО менять этот ужос надо, однозначно!
+        global $db;
+        //Проверка всех полей
+        if(!isset($_GET['session_id'])) return Array('status' => 'relogin');
+        //Поля
+        $sessionId    = $_GET['session_id'];
+        //Проверка сессии
+        $session = $db->checkSession($sessionId);
+        if($session['status'] != 'success') return $session;
+        
+        //Да, я знаю, что способ передачи параметров в ф-ию ебанутый, но я ниче лучше не придумал
+        $param = array();
+        //Проверка полей,
+        if(isset($_GET['top']))     { $param['top'] = $_GET['top']; } else { $param['top']=null; };
+        if(isset($_GET['limit']))   { $param['limit'] = $_GET['limit']; } else { $param['limit']=null; };
+        if(isset($_GET['search']))  { $param['search'] = $_GET['search']; } else { $param['search']=null; };
+        //Получить список всех пользователей
+        return $db->getAllUsers($sessionId,$param['top'],$param['limit'],$param['search']);
+    }
+    /* конец Список пользователей */
 	
 	/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * VHhPV1Ny */
 	
